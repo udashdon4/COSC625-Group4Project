@@ -5,6 +5,8 @@ import SignupPage from "./pages/SignupPage"; // create this page if you haven't
 import AccountPage from "./pages/AccountPage";
 import LoginPage from "./pages/LoginPage";
 import RecoverPage from "./pages/RecoverPage";
+import LandingPage from "./pages/LandingPage";
+import AboutPage from "./pages/AboutPage";
 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
       <Navbar />
       <div className="p-6">
         <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/recover" element={<RecoverPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
