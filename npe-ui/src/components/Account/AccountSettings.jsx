@@ -2,22 +2,14 @@ import React, { useEffect, useState } from "react";
 
 const API_KEY = "wT7qTdbCiApVc0O9U4sDpW0AEFgcfmyB8fHNW42O";
 
-// Example user data
-const user = {
-  email: "evelyn@example.com",
-  username: "Evelyn Sage",
-  handle: "@wildwanderer",
-  location: "Seattle, WA",
-  favoriteParkCode: "yose",
-  profileImage: "/images/profile-placeholder.jpg",
-};
-
 export default function AccountSettings() {
+  // Get the logged-in user's ID from localStorage.
+  const currentUserId = localStorage.getItem("userId");
   const [coverImageUrl, setCoverImageUrl] = useState("/images/cover-placeholder.jpg");
   const [formData, setFormData] = useState({
     password: "",
     secret: "",
-    favoriteParkCode: user.favoriteParkCode,
+    favoriteParkCode: "",
     profileImage: null,
   });
   const [parks, setParks] = useState([]);
@@ -38,9 +30,32 @@ export default function AccountSettings() {
     fetchParks();
   }, []);
 
+  // Fetch current user account settings from the backend on mount
+  useEffect(() => {
+    if (!currentUserId) return;
+    const fetchUserSettings = async () => {
+      try {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/users/${currentUserId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setFormData({
+            password: "", // leave blank (update only if provided)
+            secret: data.secret || "",
+            favoriteParkCode: data.fav_park || "",
+            profileImage: data.profile_image || null,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user settings:", error);
+      }
+    };
+    fetchUserSettings();
+  }, [currentUserId]);
+
   // Fetch cover image based on selected park code
   useEffect(() => {
     const fetchParkImage = async () => {
+      if (!formData.favoriteParkCode) return;
       try {
         const res = await fetch(
           `https://developer.nps.gov/api/v1/parks?parkCode=${formData.favoriteParkCode}&api_key=${API_KEY}`
@@ -55,7 +70,7 @@ export default function AccountSettings() {
       }
     };
 
-    if (formData.favoriteParkCode) fetchParkImage();
+    fetchParkImage();
   }, [formData.favoriteParkCode]);
 
   const handleChange = (e) => {
@@ -68,10 +83,59 @@ export default function AccountSettings() {
     setFormData((prev) => ({ ...prev, profileImage: file }));
   };
 
-  const handleSubmit = (e) => {
+  // Helper to convert a File to a Base64 string
+  const getBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Submitted:", formData);
-    // Implement actual form submission here
+
+    let profileImageBase64 = null;
+    if (formData.profileImage && typeof formData.profileImage !== "string") {
+      try {
+        profileImageBase64 = await getBase64(formData.profileImage);
+      } catch (error) {
+        console.error("Error converting image:", error);
+      }
+    } else if (typeof formData.profileImage === "string") {
+      profileImageBase64 = formData.profileImage;
+    }
+
+    const updateData = {
+      // If a new password is provided, it will update; otherwise, leave it blank.
+      password: formData.password, // leave blank if no change
+      secret: formData.secret,
+      fav_park: formData.favoriteParkCode,
+      profile_image: profileImageBase64,
+    };
+
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL}/users/${currentUserId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updateData),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Error updating settings:", errorData.error);
+      } else {
+        const data = await res.json();
+        console.log("Account settings updated successfully!", data);
+      }
+    } catch (error) {
+      console.error("Error submitting account settings:", error);
+    }
   };
 
   return (
@@ -86,20 +150,17 @@ export default function AccountSettings() {
           <img
             src={
               formData.profileImage
-                ? URL.createObjectURL(formData.profileImage)
-                : user.profileImage
+                ? formData.profileImage instanceof File
+                  ? URL.createObjectURL(formData.profileImage)
+                  : formData.profileImage
+                : "/images/profile-placeholder.jpg"
             }
             alt="Profile"
             className="w-full h-full object-cover"
           />
         </div>
-        <h2 className="text-xl font-semibold mt-4">
-          {user.username} <span className="text-green-600">●</span>
-        </h2>
-        <p className="text-gray-500">{user.handle}</p>
+        <h2 className="text-xl font-semibold mt-4">Account Settings</h2>
       </div>
-
-      <h3 className="text-2xl font-bold mb-6">Account Settings</h3>
 
       <form className="space-y-6" onSubmit={handleSubmit}>
         {/* Email (disabled) */}
@@ -107,7 +168,7 @@ export default function AccountSettings() {
           <label className="block font-medium mb-1">Email</label>
           <input
             type="email"
-            value={user.email}
+            value={"user@example.com"} // Replace with actual email from your auth state if available
             disabled
             className="w-full border rounded p-2 bg-gray-100 text-gray-500"
           />
@@ -122,6 +183,7 @@ export default function AccountSettings() {
             className="w-full border rounded p-2"
             value={formData.password}
             onChange={handleChange}
+            placeholder="Leave blank to keep unchanged"
           />
         </div>
 
