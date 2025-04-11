@@ -8,10 +8,10 @@ const SignupPage = () => {
     favoritePark: "",
     profileImage: null,
   });
-
   const [parks, setParks] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // API key for the parks API (non-sensitive)
   const apiKey = "wT7qTdbCiApVc0O9U4sDpW0AEFgcfmyB8fHNW42O";
 
   useEffect(() => {
@@ -49,6 +49,7 @@ const SignupPage = () => {
       [e.target.name]: e.target.value,
     }));
   };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setFormData((prev) => ({
@@ -57,16 +58,68 @@ const SignupPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // Helper to convert a File to a Base64 string
+  const getBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Submitted:", formData);
+    console.log("Submitting form:", formData);
+
+    // Convert profile image to Base64 if a file is selected
+    let profileImageBase64 = null;
+    if (formData.profileImage) {
+      try {
+        profileImageBase64 = await getBase64(formData.profileImage);
+      } catch (error) {
+        console.error("Error converting image:", error);
+      }
+    }
+
+    // Map formData to backend fields.
+    const signupData = {
+      username: formData.email,        // email goes to username field
+      password: formData.password,       // password will be hashed on the backend
+      secret: formData.secretWord,       // secret word
+      fav_park: formData.favoritePark,   // favorite park
+      profile_image: profileImageBase64, // new field for profile image
+    };
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signupData),
+      });
+
+      if (!response.ok) {
+        console.error("Error creating user:", response.statusText);
+      } else {
+        const data = await response.json();
+        console.log("User created successfully!", data);
+        // Optionally, clear the form or redirect the user
+        setFormData({
+          email: "",
+          password: "",
+          secretWord: "",
+          favoritePark: "",
+          profileImage: null,
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting signup:", error);
+    }
   };
 
   return (
     <div className="max-w-md mx-auto mt-12 bg-white shadow-md rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-center mb-6 text-green-800">
-        Sign Up
-      </h2>
+      <h2 className="text-2xl font-bold text-center mb-6 text-green-800">Sign Up</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Email */}
@@ -84,9 +137,7 @@ const SignupPage = () => {
 
         {/* Password */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">
-            Password
-          </label>
+          <label className="block font-medium mb-1 text-gray-700">Password</label>
           <input
             type="password"
             name="password"
@@ -99,9 +150,7 @@ const SignupPage = () => {
 
         {/* Secret Word */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">
-            Secret Word
-          </label>
+          <label className="block font-medium mb-1 text-gray-700">Secret Word</label>
           <input
             type="text"
             name="secretWord"
@@ -114,9 +163,7 @@ const SignupPage = () => {
 
         {/* Favorite National Park Dropdown */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">
-            Favorite National Park
-          </label>
+          <label className="block font-medium mb-1 text-gray-700">Favorite National Park</label>
           {loading ? (
             <p>Loading parks...</p>
           ) : (
@@ -138,12 +185,10 @@ const SignupPage = () => {
             </select>
           )}
         </div>
+
         {/* Profile Image Upload */}
         <div className="text-center">
-          <label className="block font-medium mb-2 text-gray-700">
-            Profile Image
-          </label>
-
+          <label className="block font-medium mb-2 text-gray-700">Profile Image</label>
           {formData.profileImage ? (
             <img
               src={URL.createObjectURL(formData.profileImage)}
@@ -155,7 +200,6 @@ const SignupPage = () => {
               <span>📷</span>
             </div>
           )}
-
           <input
             type="file"
             accept="image/*"
