@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const RecoverPage = () => {
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     secretWord: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth(); // ✅ put at the top of your component
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -19,13 +21,13 @@ const RecoverPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { email, secretWord } = formData;
+    const { username, secretWord } = formData;
 
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/recover`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, secretWord }),
+        body: JSON.stringify({ username, secretWord }),
       });
 
       if (!res.ok) {
@@ -37,9 +39,9 @@ const RecoverPage = () => {
         setSuccess(true);
         setError("");
         console.log("Account recovery successful:", data);
-        // Automatically log the user in by storing their user ID and redirect
         localStorage.setItem("userId", data.userId);
-        navigate("/account"); // Redirect to account page to allow updating the password
+        login(data.userId); // ✅ updates global auth state
+        navigate("/account");
       }
     } catch (err) {
       console.error("Error during account recovery:", err);
@@ -64,16 +66,16 @@ const RecoverPage = () => {
             <p className="text-red-600 text-sm text-center mb-4">{error}</p>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
+            {/* Username */}
             <div>
               <label className="block font-medium mb-1 text-gray-700">
-                Email
+                Username
               </label>
               <input
-                type="email"
-                name="email"
+                type="username"
+                name="username"
                 className="w-full px-3 py-2 border rounded-md bg-[#ecece5] focus:outline-none"
-                value={formData.email}
+                value={formData.username}
                 onChange={handleChange}
                 required
               />

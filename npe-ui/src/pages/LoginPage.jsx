@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // ✅ NEW
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const [message, setMessage] = useState("");
+
+  const { login } = useAuth(); // ✅ get login function from context
+  const navigate = useNavigate(); // ✅ redirect after login
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -17,6 +18,7 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
     console.log("Logging in:", formData);
 
     try {
@@ -24,19 +26,21 @@ const LoginPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
+        credentials: "include", // optional if using cookies
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        setMessage(`Error: ${errorData.error}`);
-        console.error("Login error:", errorData.error);
+        setMessage(`Error: ${data.error}`);
+        console.error("Login error:", data.error);
       } else {
-        const data = await response.json();
         setMessage("Login successful!");
         console.log("Login successful:", data);
-        // Save the logged-in user's ID in localStorage
-        localStorage.setItem("userId", data.userId);
-        // Do not redirect automatically; user remains on the login page.
+
+        localStorage.setItem("userId", data.userId); // optional for refresh persistence
+        login(data.userId); // ✅ set user in global context
+        navigate("/account"); // ✅ redirect to account page
       }
     } catch (error) {
       console.error("Error during login:", error);
@@ -51,14 +55,14 @@ const LoginPage = () => {
       {message && <p className="text-center mb-4">{message}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Email */}
+        {/* Username */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">Email</label>
+          <label className="block font-medium mb-1 text-gray-700">Username</label>
           <input
-            type="email"
-            name="email"
+            type="username"
+            name="username"
             className="w-full px-3 py-2 border rounded-md bg-[#ecece5] focus:outline-none"
-            value={formData.email}
+            value={formData.username}
             onChange={handleChange}
             required
           />

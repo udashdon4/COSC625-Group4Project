@@ -3,10 +3,12 @@ import React, { useEffect, useState } from "react";
 const API_KEY = "wT7qTdbCiApVc0O9U4sDpW0AEFgcfmyB8fHNW42O";
 
 export default function AccountSettings() {
-  // Get the logged-in user's ID from localStorage.
   const currentUserId = localStorage.getItem("userId");
-  const [coverImageUrl, setCoverImageUrl] = useState("/images/cover-placeholder.jpg");
+  const [coverImageUrl, setCoverImageUrl] = useState(
+    "/images/cover-placeholder.jpg"
+  );
   const [formData, setFormData] = useState({
+    username: "",
     password: "",
     secret: "",
     favoriteParkCode: "",
@@ -14,15 +16,28 @@ export default function AccountSettings() {
   });
   const [parks, setParks] = useState([]);
 
-  // Fetch parks list for dropdown
+  // Fetch all parks on mount
   useEffect(() => {
     const fetchParks = async () => {
+      let allParks = [];
+      let start = 0;
+      const limit = 50; // use 50 to stay safe with rate limits
+      let total = 0;
+
       try {
-        const res = await fetch(
-          `https://developer.nps.gov/api/v1/parks?limit=100&api_key=${API_KEY}`
-        );
-        const data = await res.json();
-        setParks(data.data || []);
+        do {
+          const res = await fetch(
+            `https://developer.nps.gov/api/v1/parks?limit=${limit}&start=${start}&api_key=${API_KEY}`
+          );
+          const data = await res.json();
+
+          if (!total) total = parseInt(data.total);
+          allParks = [...allParks, ...data.data];
+          start += limit;
+        } while (allParks.length < total);
+
+        setParks(allParks);
+        localStorage.setItem("allParks", JSON.stringify(allParks));
       } catch (err) {
         console.error("Error loading parks:", err);
       }
@@ -30,18 +45,26 @@ export default function AccountSettings() {
     fetchParks();
   }, []);
 
-  // Fetch current user account settings from the backend on mount
+  // Fetch user settings once parks are loaded
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!currentUserId || parks.length === 0) return;
+
     const fetchUserSettings = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/users/${currentUserId}`);
+        const res = await fetch(
+          `${process.env.REACT_APP_API_URL}/users/${currentUserId}`
+        );
         if (res.ok) {
           const data = await res.json();
+
+          const matchedPark = parks.find(p => p.fullName === data.fav_park || p.name === data.fav_park);
+          const matchedParkCode = matchedPark ? matchedPark.parkCode : "";
+
           setFormData({
-            password: "", // leave blank (update only if provided)
+            username: data.username || "",
+            password: "",
             secret: data.secret || "",
-            favoriteParkCode: data.fav_park || "",
+            favoriteParkCode: matchedParkCode,
             profileImage: data.profile_image || null,
           });
         }
@@ -49,10 +72,11 @@ export default function AccountSettings() {
         console.error("Error fetching user settings:", error);
       }
     };
-    fetchUserSettings();
-  }, [currentUserId]);
 
-  // Fetch cover image based on selected park code
+    fetchUserSettings();
+  }, [parks, currentUserId]);
+
+  // Fetch park image based on selected parkCode
   useEffect(() => {
     const fetchParkImage = async () => {
       if (!formData.favoriteParkCode) return;
@@ -83,7 +107,6 @@ export default function AccountSettings() {
     setFormData((prev) => ({ ...prev, profileImage: file }));
   };
 
-  // Helper to convert a File to a Base64 string
   const getBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -109,10 +132,11 @@ export default function AccountSettings() {
     }
 
     const updateData = {
-      // If a new password is provided, it will update; otherwise, leave it blank.
-      password: formData.password, // leave blank if no change
+      password: formData.password,
       secret: formData.secret,
-      fav_park: formData.favoriteParkCode,
+      fav_park:
+        parks.find((p) => p.parkCode === formData.favoriteParkCode)?.fullName ||
+        "",
       profile_image: profileImageBase64,
     };
 
@@ -163,12 +187,13 @@ export default function AccountSettings() {
       </div>
 
       <form className="space-y-6" onSubmit={handleSubmit}>
-        {/* Email (disabled) */}
+        {/* Username (disabled) */}
         <div>
-          <label className="block font-medium mb-1">Email</label>
+          <label className="block font-medium mb-1">Username</label>{" "}
+          {/* changed from Email */}
           <input
-            type="email"
-            value={"user@example.com"} // Replace with actual email from your auth state if available
+            type="text"
+            value={formData.username || ""}
             disabled
             className="w-full border rounded p-2 bg-gray-100 text-gray-500"
           />
@@ -201,7 +226,9 @@ export default function AccountSettings() {
 
         {/* Favorite National Park */}
         <div>
-          <label className="block font-medium mb-1">Favorite National Park</label>
+          <label className="block font-medium mb-1">
+            Favorite National Park
+          </label>
           <select
             name="favoriteParkCode"
             className="w-full border rounded p-2"

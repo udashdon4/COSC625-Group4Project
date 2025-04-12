@@ -10,9 +10,16 @@ const port = process.env.PORT || 5000;
 const db = require('./db');
 
 // Middleware to enable CORS
-app.use(cors());
-// Middleware to parse JSON bodies
-app.use(express.json());
+app.use(cors({
+  origin: "http://localhost:3000",  
+  credentials: true                
+}));
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
+// Increase limit to handle profile image in Base64 (e.g. 2MB)
+app.use(express.json({ limit: '5mb' }));
 
 // Test Database Connection Endpoint
 app.get('/test-db', async (req, res) => {
@@ -61,23 +68,21 @@ app.post('/users', async (req, res) => {
 
 // New Login Endpoint
 app.post('/login', async (req, res) => {
-  const { email, password } = req.body; // email maps to username
+  const { username, password } = req.body; // ✅ updated from email to username
   try {
-    // Query the user_accounts table for the provided email
+    const normalizedUsername = username.trim().toLowerCase(); // optional: normalize case
     const [users] = await db.query(
-      'SELECT * FROM user_accounts WHERE username = ?',
-      [email]
+      'SELECT * FROM user_accounts WHERE LOWER(username) = ?',
+      [normalizedUsername]
     );
     if (users.length === 0) {
       return res.status(401).json({ error: 'User not found' });
     }
     const user = users[0];
-    // Compare hashed passwords
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res.status(401).json({ error: 'Incorrect password' });
     }
-    // Successful login response; return the user ID so frontend can save it.
     res.json({ message: 'Login successful', userId: user.user_id });
   } catch (error) {
     console.error('Login error:', error);
@@ -85,30 +90,29 @@ app.post('/login', async (req, res) => {
   }
 });
 
+
 // NEW: Recover Account Endpoint
 app.post('/recover', async (req, res) => {
-  const { email, secretWord } = req.body;
+  const { username, secretWord } = req.body; // ✅ updated from email to username
   try {
-    // Query the user_accounts table using the provided email (username)
     const [users] = await db.query(
       'SELECT * FROM user_accounts WHERE username = ?',
-      [email]
+      [username.trim()]
     );
     if (users.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
     const user = users[0];
-    // Compare the provided secret word (case-insensitive)
     if (user.secret.trim().toLowerCase() !== secretWord.trim().toLowerCase()) {
       return res.status(401).json({ error: 'Incorrect secret word' });
     }
-    // Recovery successful: Return user ID so front-end can auto-login.
     res.json({ message: 'Account recovery successful', userId: user.user_id });
   } catch (error) {
     console.error('Recovery error:', error);
     res.status(500).json({ error: 'Failed to recover account' });
   }
 });
+
 
 // NEW: Get Account Settings for a User by ID
 app.get('/users/:id', async (req, res) => {
