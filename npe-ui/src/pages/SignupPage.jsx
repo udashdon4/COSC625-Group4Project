@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // ✅
+import { useAuth } from "../context/AuthContext"; // ✅
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
-    email: "",
+    username: "", // ✅ was email
     password: "",
     secretWord: "",
     favoritePark: "",
@@ -10,6 +12,8 @@ const SignupPage = () => {
   });
   const [parks, setParks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { login } = useAuth(); // ✅ get login function
+  const navigate = useNavigate(); // ✅ for redirecting
 
   // API key for the parks API (non-sensitive)
   const apiKey = "wT7qTdbCiApVc0O9U4sDpW0AEFgcfmyB8fHNW42O";
@@ -84,12 +88,13 @@ const SignupPage = () => {
 
     // Map formData to backend fields.
     const signupData = {
-      username: formData.email,        // email goes to username field
-      password: formData.password,       // password will be hashed on the backend
-      secret: formData.secretWord,       // secret word
-      fav_park: formData.favoritePark,   // favorite park
-      profile_image: profileImageBase64, // new field for profile image
+      username: formData.username,       // ✅ changed from formData.email
+      password: formData.password,
+      secret: formData.secretWord,
+      fav_park: formData.favoritePark,
+      profile_image: profileImageBase64,
     };
+    
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/users`, {
@@ -103,14 +108,17 @@ const SignupPage = () => {
       } else {
         const data = await response.json();
         console.log("User created successfully!", data);
+        login(data.userId); // ✅ store in AuthContext
+        navigate("/account"); // ✅ redirect to account page
         // Optionally, clear the form or redirect the user
         setFormData({
-          email: "",
+          username: "",                    // ✅ was email
           password: "",
           secretWord: "",
           favoritePark: "",
           profileImage: null,
         });
+        
       }
     } catch (error) {
       console.error("Error submitting signup:", error);
@@ -119,17 +127,21 @@ const SignupPage = () => {
 
   return (
     <div className="max-w-md mx-auto mt-12 bg-white shadow-md rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-center mb-6 text-green-800">Sign Up</h2>
+      <h2 className="text-2xl font-bold text-center mb-6 text-green-800">
+        Sign Up
+      </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Email */}
+        {/* Username */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">Email</label>
+          <label className="block font-medium mb-1 text-gray-700">
+            Username
+          </label>
           <input
-            type="email"
-            name="email"
+            type="text" // ✅ was type="email"
+            name="username" // ✅ was name="email"
             className="w-full px-3 py-2 border rounded-md bg-[#ecece5] focus:outline-none"
-            value={formData.email}
+            value={formData.username}
             onChange={handleChange}
             required
           />
@@ -137,7 +149,9 @@ const SignupPage = () => {
 
         {/* Password */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">Password</label>
+          <label className="block font-medium mb-1 text-gray-700">
+            Password
+          </label>
           <input
             type="password"
             name="password"
@@ -150,7 +164,9 @@ const SignupPage = () => {
 
         {/* Secret Word */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">Secret Word</label>
+          <label className="block font-medium mb-1 text-gray-700">
+            Secret Word
+          </label>
           <input
             type="text"
             name="secretWord"
@@ -163,7 +179,9 @@ const SignupPage = () => {
 
         {/* Favorite National Park Dropdown */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">Favorite National Park</label>
+          <label className="block font-medium mb-1 text-gray-700">
+            Favorite National Park
+          </label>
           {loading ? (
             <p>Loading parks...</p>
           ) : (
@@ -188,7 +206,9 @@ const SignupPage = () => {
 
         {/* Profile Image Upload */}
         <div className="text-center">
-          <label className="block font-medium mb-2 text-gray-700">Profile Image</label>
+          <label className="block font-medium mb-2 text-gray-700">
+            Profile Image
+          </label>
           {formData.profileImage ? (
             <img
               src={URL.createObjectURL(formData.profileImage)}
