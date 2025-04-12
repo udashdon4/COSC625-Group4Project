@@ -38,7 +38,7 @@ const LandingPage = () => {
         <div className="z-10 max-w-2xl px-4">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">Discover the Wonders of Nature.</h1>
           <a 
-            href="#explore" 
+            href="/parksearch" 
             className="inline-block mt-8 px-8 py-3 bg-white text-gray-800 font-semibold rounded-md hover:bg-gray-100 transition-colors duration-300 shadow-lg"
           >
             Explore
