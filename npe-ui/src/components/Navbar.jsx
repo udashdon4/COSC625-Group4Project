@@ -35,6 +35,12 @@ const Navbar = () => {
           >
             Park Search
           </Link>
+          <Link
+            to="/map"
+            className="text-white hover:text-green-200 px-3 py-2 rounded-md font-medium transition"
+          >
+            View National Parks Map
+          </Link>
 
           {!isLoggedIn && (
             <>
