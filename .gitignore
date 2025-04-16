@@ -32,3 +32,6 @@ Thumbs.db
 
 # Optional if using Jest
 /jest-test-results.json
+
+# GitHub Actions artifacts
+.github/
