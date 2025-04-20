@@ -18,22 +18,22 @@ function App() {
       <Navbar />
       <div className="p-6">
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/recover" element={<RecoverPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/map" element={<MapPage />} />
+          <Route path="/COSC625-Group4Project/" element={<LandingPage />} />
+          <Route path="/COSC625-Group4Project/about" element={<AboutPage />} />
+          <Route path="/COSC625-Group4Project/recover" element={<RecoverPage />} />
+          <Route path="/COSC625-Group4Project/login" element={<LoginPage />} />
+          <Route path="/COSC625-Group4Project/signup" element={<SignupPage />} />
+          <Route path="/COSC625-Group4Project/map" element={<MapPage />} />
           <Route
-            path="/account"
+            path="/COSC625-Group4Project/account"
             element={
               <PrivateRoute>
                 <AccountPage />
               </PrivateRoute>
             }
           />
-          <Route path="/parksearch" element={<ParkSearch />} />
-          <Route path="/parks/:parkCode" element={<ParkDetails />} />
+          <Route path="/COSC625-Group4Project/parksearch" element={<ParkSearch />} />
+          <Route path="/COSC625-Group4Project/parks/:parkCode" element={<ParkDetails />} />
         </Routes>
       </div>
     </Router>
