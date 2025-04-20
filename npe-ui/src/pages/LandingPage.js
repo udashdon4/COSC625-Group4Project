@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import heroImage1 from '../assets/images/hero-1.jpg';
+import heroImage2 from '../assets/images/hero-2.jpg';
+import heroImage3 from '../assets/images/hero-3.jpg';
+import heroImage4 from '../assets/images/hero-4.jpg';
+import heroImage5 from '../assets/images/hero-5.jpg';
 
 // Image paths relative to the 'public' folder
 const heroImages = Array.from({ length: 10 }, (_, i) => `/images/hero-${i + 1}.jpg`);
@@ -111,7 +116,7 @@ const LandingPage = () => {
       {/* Featured Image Section - Improved sizing and no cropping */}
       <section className="relative">
         <img 
-          src={`${process.env.PUBLIC_URL}/images/hero-1.jpg`}
+          src={heroImage1}
           alt="Beautiful landscape of a national park" 
           className="w-full h-auto md:h-[500px] object-cover object-center"
         />
@@ -124,7 +129,7 @@ const LandingPage = () => {
             {/* Left side (optional photo) */}
             <div className="md:w-2/5 lg:w-1/2 bg-gray-100 rounded-lg overflow-hidden hidden md:block">
               <img 
-                src={`${process.env.PUBLIC_URL}/images/hero-5.jpg`}
+                src={heroImage5}
                 alt="National Park scenery" 
                 className="w-full h-full object-cover"
               />
@@ -164,7 +169,7 @@ const LandingPage = () => {
             {/* Card 1 */}
             <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
               <img 
-                src={`${process.env.PUBLIC_URL}/images/hero-2.jpg`}
+                src={heroImage2}
                 alt="Activities and sightseeing" 
                 className="w-full h-56 object-cover"
               />
@@ -179,7 +184,7 @@ const LandingPage = () => {
             {/* Card 2 */}
             <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
               <img 
-                src={`${process.env.PUBLIC_URL}/images/hero-3.jpg`}
+                src={heroImage3}
                 alt="Exciting activities" 
                 className="w-full h-56 object-cover"
               />
@@ -194,7 +199,7 @@ const LandingPage = () => {
             {/* Card 3 */}
             <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
               <img 
-                src={`${process.env.PUBLIC_URL}/images/hero-4.jpg`}
+                src={heroImage4}
                 alt="Conservation efforts" 
                 className="w-full h-56 object-cover"
               />
