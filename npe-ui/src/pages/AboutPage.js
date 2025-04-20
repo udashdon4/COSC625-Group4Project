@@ -8,21 +8,21 @@ const AboutPage = () => {
       title: 'Exploring the Outdoors: National Park Explorer\'s New Features',
       category: 'Nature, Conservation',
       date: 'Oct 15, 2023',
-      image: '/images/hero-6.jpg',
+      image: `${process.env.PUBLIC_URL}/images/hero-6.jpg`,
     },
     {
       id: 2,
       title: 'Top 10 National Parks to Visit This Fall',
       category: 'Travel, Adventure',
       date: 'Sep 20, 2023',
-      image: '/images/hero-7.jpg',
+      image: `${process.env.PUBLIC_URL}/images/hero-7.jpg`,
     },
     {
       id: 3,
       title: 'An engaging cloud-first website featuring the mission and values of the National Park Explorer',
       category: 'Website, Conservation',
       date: 'Aug 15, 2023',
-      image: '/images/hero-8.jpg',
+      image: `${process.env.PUBLIC_URL}/images/hero-8.jpg`,
     },
   ];
 
