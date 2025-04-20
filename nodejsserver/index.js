@@ -11,7 +11,7 @@ const db = require('./db');
 
 // Middleware to enable CORS
 app.use(cors({
-  origin: "http://localhost:3000",  
+  origin: "http://npe-backend.onrender.com:3000",  
   credentials: true                
 }));
 app.use(cors({
