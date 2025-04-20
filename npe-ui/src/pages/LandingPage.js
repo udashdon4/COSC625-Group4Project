@@ -164,7 +164,7 @@ const LandingPage = () => {
             {/* Card 1 */}
             <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
               <img 
-                src="/npe-ui/public/images/hero-2.jpg" 
+                src={`${process.env.PUBLIC_URL}/images/hero-2.jpg`}
                 alt="Activities and sightseeing" 
                 className="w-full h-56 object-cover"
               />
