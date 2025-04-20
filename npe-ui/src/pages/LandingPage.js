@@ -111,7 +111,7 @@ const LandingPage = () => {
       {/* Featured Image Section - Improved sizing and no cropping */}
       <section className="relative">
         <img 
-          src="/images/hero-1.jpg" 
+          src={`${process.env.PUBLIC_URL}/images/hero-1.jpg`}
           alt="Beautiful landscape of a national park" 
           className="w-full h-auto md:h-[500px] object-cover object-center"
         />
@@ -124,7 +124,7 @@ const LandingPage = () => {
             {/* Left side (optional photo) */}
             <div className="md:w-2/5 lg:w-1/2 bg-gray-100 rounded-lg overflow-hidden hidden md:block">
               <img 
-                src="/images/hero-5.jpg" 
+                src={`${process.env.PUBLIC_URL}/images/hero-5.jpg`}
                 alt="National Park scenery" 
                 className="w-full h-full object-cover"
               />
@@ -179,7 +179,7 @@ const LandingPage = () => {
             {/* Card 2 */}
             <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
               <img 
-                src="/images/hero-3.jpg" 
+                src={`${process.env.PUBLIC_URL}/images/hero-3.jpg`}
                 alt="Exciting activities" 
                 className="w-full h-56 object-cover"
               />
@@ -194,7 +194,7 @@ const LandingPage = () => {
             {/* Card 3 */}
             <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
               <img 
-                src="/images/hero-4.jpg" 
+                src={`${process.env.PUBLIC_URL}/images/hero-4.jpg`}
                 alt="Conservation efforts" 
                 className="w-full h-56 object-cover"
               />
