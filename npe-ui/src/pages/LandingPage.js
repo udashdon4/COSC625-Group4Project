@@ -4,6 +4,7 @@ import heroImage2 from '../assets/images/hero-2.jpg';
 import heroImage3 from '../assets/images/hero-3.jpg';
 import heroImage4 from '../assets/images/hero-4.jpg';
 import heroImage5 from '../assets/images/hero-5.jpg';
+import { useNavigate } from "react-router-dom";
 
 // Image paths relative to the 'public' folder
 const heroImages = [heroImage1, heroImage2, heroImage3, heroImage4, heroImage5]
@@ -11,6 +12,7 @@ const heroImages = [heroImage1, heroImage2, heroImage3, heroImage4, heroImage5]
 const LandingPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [backgroundStyle, setBackgroundStyle] = useState({});
+  const navigate = useNavigate();
 
   // Effect to change the image index every 7 seconds
   useEffect(() => {
@@ -43,7 +45,7 @@ const LandingPage = () => {
         <div className="z-10 max-w-2xl px-4">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">Discover the Wonders of Nature.</h1>
           <a 
-            href="/parksearch" 
+            href="COSC625-Group4Project/parksearch" 
             className="inline-block mt-8 px-8 py-3 bg-white text-gray-800 font-semibold rounded-md hover:bg-gray-100 transition-colors duration-300 shadow-lg"
           >
             Explore
@@ -152,7 +154,9 @@ const LandingPage = () => {
                 </div>
               </div>
               
-              <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-md transition duration-300 shadow-md">
+              <button onClick={() => {
+                  navigate("/COSC625-Group4Project/login"); // redirect
+                }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-md transition duration-300 shadow-md">
                 Embark on Your Journey
               </button>
             </div>
