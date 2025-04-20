@@ -6,7 +6,7 @@ import heroImage4 from '../assets/images/hero-4.jpg';
 import heroImage5 from '../assets/images/hero-5.jpg';
 
 // Image paths relative to the 'public' folder
-const heroImages = Array.from({ length: 10 }, (_, i) => `/images/hero-${i + 1}.jpg`);
+const heroImages = [heroImage1, heroImage2, heroImage3, heroImage4, heroImage5]
 
 const LandingPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
