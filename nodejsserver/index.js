@@ -9,19 +9,22 @@ const port = process.env.PORT || 5000;
 
 const db = require('./db');
 
-// Middleware to enable CORS
+const allowedOrigins = [
+  'https://hollywoodchase.github.io', // ✅ your GitHub Pages frontend
+  'http://localhost:3000'             // ✅ optional: local dev
+];
+
 app.use(cors({
-  origin: "https://cosc625-group4project.onrender.com:3000", 
-  credentials: true                
-}));
-app.use(cors({
-  origin: 'https://hollywoodchase.github.io',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-});
+
 // Increase limit to handle profile image in Base64 (e.g. 2MB)
 app.use(express.json({ limit: '5mb' }));
 
