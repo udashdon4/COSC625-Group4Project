@@ -68,9 +68,11 @@ app.post('/users', async (req, res) => {
     );
     res.json({ message: 'User created successfully', userId: result[0].insertId });
   } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Failed to create user' });
+    console.error('❌ Error creating user:\n', error.message);  // Show just the message
+    console.error(error); // Optional: full stack trace
+    res.status(500).json({ error: error.message }); // Send full error to frontend (for dev only)
   }
+  
 });
 
 // New Login Endpoint
