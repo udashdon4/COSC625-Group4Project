@@ -27,6 +27,18 @@ app.use(cors({
 
 // Increase limit to handle profile image in Base64 (e.g. 2MB)
 app.use(express.json({ limit: '5mb' }));
+const dns = require('dns');
+
+app.get('/test-dns', (req, res) => {
+  dns.lookup(process.env.DB_HOST, (err, address, family) => {
+    if (err) {
+      console.error('DNS resolution failed:', err);
+      return res.status(500).send('❌ DNS lookup failed');
+    }
+    console.log(`DNS resolved to: ${address}`);
+    res.send(`✅ DNS resolved to ${address}`);
+  });
+});
 
 // Test Database Connection Endpoint
 app.get('/test-db', async (req, res) => {
