@@ -109,7 +109,7 @@ const SignupPage = () => {
         const data = await response.json();
         console.log("User created successfully!", data);
         login(data.userId); // ✅ store in AuthContext
-        navigate("/account"); // ✅ redirect to account page
+        navigate("/COSC625-Group4Project/account"); // ✅ redirect to account page
         // Optionally, clear the form or redirect the user
         setFormData({
           username: "",                    // ✅ was email

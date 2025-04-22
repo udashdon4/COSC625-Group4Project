@@ -40,7 +40,7 @@ const LoginPage = () => {
 
         localStorage.setItem("userId", data.userId); // optional for refresh persistence
         login(data.userId); // ✅ set user in global context
-        navigate("/account"); // ✅ redirect to account page
+        navigate("/COSC625-Group4Project/account"); // ✅ redirect to account page
       }
     } catch (error) {
       console.error("Error during login:", error);

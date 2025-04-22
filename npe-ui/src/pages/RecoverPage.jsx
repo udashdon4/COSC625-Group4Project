@@ -41,7 +41,7 @@ const RecoverPage = () => {
         console.log("Account recovery successful:", data);
         localStorage.setItem("userId", data.userId);
         login(data.userId); // ✅ updates global auth state
-        navigate("/account");
+        navigate("/COSC625-Group4Project/account");
       }
     } catch (err) {
       console.error("Error during account recovery:", err);
