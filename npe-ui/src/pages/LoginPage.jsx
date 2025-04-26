@@ -83,7 +83,7 @@ const LoginPage = () => {
 
         {/* Forgot Password Link */}
         <div className="text-right">
-          <Link to="/recover" className="text-sm text-green-700 hover:underline">
+          <Link to="/COSC625-Group4Project/recover" className="text-sm text-green-700 hover:underline">
             Forgot Password?
           </Link>
         </div>

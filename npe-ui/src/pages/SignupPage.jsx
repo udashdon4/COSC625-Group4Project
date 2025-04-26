@@ -1,125 +1,74 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅
-import { useAuth } from "../context/AuthContext"; // ✅
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+const API_KEY = "wT7qTdbCiApVc0O9U4sDpW0AEFgcfmyB8fHNW42O";
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
-    username: "", // ✅ was email
+    username: "",
     password: "",
     secretWord: "",
     favoritePark: "",
-    profileImage: null,
   });
   const [parks, setParks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { login } = useAuth(); // ✅ get login function
-  const navigate = useNavigate(); // ✅ for redirecting
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-  // API key for the parks API (non-sensitive)
-  const apiKey = "wT7qTdbCiApVc0O9U4sDpW0AEFgcfmyB8fHNW42O";
-
+  // load parks list (optional)
   useEffect(() => {
     const fetchAllParks = async () => {
-      let allParks = [];
-      let start = 0;
-      const limit = 50;
-      let total = 0;
-
+      let all = [], start = 0, limit = 50, total = 0;
       try {
         do {
           const res = await fetch(
-            `https://developer.nps.gov/api/v1/parks?limit=${limit}&start=${start}&api_key=${apiKey}`
+            `https://developer.nps.gov/api/v1/parks?limit=${limit}&start=${start}&api_key=${API_KEY}`
           );
           const data = await res.json();
-          total = parseInt(data.total);
-          allParks = [...allParks, ...data.data];
+          total = parseInt(data.total, 10);
+          all = all.concat(data.data);
           start += limit;
-        } while (allParks.length < total);
-
-        setParks(allParks);
+        } while (all.length < total);
+        setParks(all);
       } catch (err) {
         console.error("Error fetching parks:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchAllParks();
   }, []);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setFormData((prev) => ({
-      ...prev,
-      profileImage: file,
-    }));
-  };
-
-  // Helper to convert a File to a Base64 string
-  const getBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
+    setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitting form:", formData);
 
-    // Convert profile image to Base64 if a file is selected
-    let profileImageBase64 = null;
-    if (formData.profileImage) {
-      try {
-        profileImageBase64 = await getBase64(formData.profileImage);
-      } catch (error) {
-        console.error("Error converting image:", error);
-      }
-    }
-
-    // Map formData to backend fields.
     const signupData = {
-      username: formData.username,       // ✅ changed from formData.email
+      username: formData.username,
       password: formData.password,
       secret: formData.secretWord,
-      fav_park: formData.favoritePark,
-      profile_image: profileImageBase64,
+      fav_park: formData.favoritePark || "", // optional
     };
-    
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/users`, {
+      const response = await fetch(`${apiUrl}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(signupData),
       });
-
       if (!response.ok) {
         console.error("Error creating user:", response.statusText);
-      } else {
-        const data = await response.json();
-        console.log("User created successfully!", data);
-        login(data.userId); // ✅ store in AuthContext
-        navigate("/COSC625-Group4Project/account"); // ✅ redirect to account page
-        // Optionally, clear the form or redirect the user
-        setFormData({
-          username: "",                    // ✅ was email
-          password: "",
-          secretWord: "",
-          favoritePark: "",
-          profileImage: null,
-        });
-        
+        return;
       }
+      const data = await response.json();
+      login(data.userId);
+      navigate("/COSC625-Group4Project/account");
+      setFormData({ username: "", password: "", secretWord: "", favoritePark: "" });
     } catch (error) {
       console.error("Error submitting signup:", error);
     }
@@ -134,12 +83,10 @@ const SignupPage = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Username */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">
-            Username
-          </label>
+          <label className="block font-medium mb-1 text-gray-700">Username</label>
           <input
-            type="text" // ✅ was type="email"
-            name="username" // ✅ was name="email"
+            type="text"
+            name="username"
             className="w-full px-3 py-2 border rounded-md bg-[#ecece5] focus:outline-none"
             value={formData.username}
             onChange={handleChange}
@@ -149,9 +96,7 @@ const SignupPage = () => {
 
         {/* Password */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">
-            Password
-          </label>
+          <label className="block font-medium mb-1 text-gray-700">Password</label>
           <input
             type="password"
             name="password"
@@ -164,9 +109,7 @@ const SignupPage = () => {
 
         {/* Secret Word */}
         <div>
-          <label className="block font-medium mb-1 text-gray-700">
-            Secret Word
-          </label>
+          <label className="block font-medium mb-1 text-gray-700">Secret Word</label>
           <input
             type="text"
             name="secretWord"
@@ -177,58 +120,38 @@ const SignupPage = () => {
           />
         </div>
 
-        {/* Favorite National Park Dropdown */}
+        {/* Favorite Park (optional) */}
         <div>
           <label className="block font-medium mb-1 text-gray-700">
-            Favorite National Park
+            Favorite National Park (optional)
           </label>
           {loading ? (
             <p>Loading parks...</p>
-          ) : (
+          ) : parks.length > 0 ? (
             <select
               name="favoritePark"
               className="w-full px-3 py-2 border rounded-md bg-[#ecece5] focus:outline-none"
               value={formData.favoritePark}
               onChange={handleChange}
-              required
             >
-              <option value="">-- Select a Park --</option>
+              <option value="">-- No favorite park --</option>
               {parks
-                .sort((a, b) => a.name.localeCompare(b.name))
+                .filter((p) => p && p.fullName)
+                .sort((a, b) => a.fullName.localeCompare(b.fullName))
                 .map((park) => (
-                  <option key={park.id} value={park.name}>
-                    {park.name}
+                  <option key={park.parkCode} value={park.fullName}>
+                    {park.fullName}
                   </option>
                 ))}
             </select>
-          )}
-        </div>
-
-        {/* Profile Image Upload */}
-        <div className="text-center">
-          <label className="block font-medium mb-2 text-gray-700">
-            Profile Image
-          </label>
-          {formData.profileImage ? (
-            <img
-              src={URL.createObjectURL(formData.profileImage)}
-              alt="Profile Preview"
-              className="mx-auto mb-3 w-24 h-24 object-cover rounded-full border-2 border-green-700"
-            />
           ) : (
-            <div className="w-24 h-24 mx-auto mb-3 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-400">
-              <span>📷</span>
-            </div>
+            <p className="text-sm text-gray-500">
+              Couldn't load parks. You can sign up without selecting one.
+            </p>
           )}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="mx-auto block text-sm text-gray-500"
-          />
         </div>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <div className="text-center">
           <button
             type="submit"

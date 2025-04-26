@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from "react";
 
 const API_KEY = "wT7qTdbCiApVc0O9U4sDpW0AEFgcfmyB8fHNW42O";
+const BACKEND = "https://cosc625-group4project.onrender.com"; // e.g. http://localhost:5000
 
 export default function AccountSettings() {
-  const currentUserId = localStorage.getItem("userId");
-  const [coverImageUrl, setCoverImageUrl] = useState(
-    "/images/cover-placeholder.jpg"
-  );
+  const currentUserId = localStorage.getItem("userId");  // still keep userId in localStorage for session
+  const [coverImageUrl, setCoverImageUrl] = useState("/images/cover-placeholder.jpg");
+
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     secret: "",
     favoriteParkCode: "",
-    profileImage: null,
+    profileImage: null, // File OR URL string
   });
-  const [parks, setParks] = useState([]);
 
-  // Fetch all parks on mount
+  const [previewUrl, setPreviewUrl] = useState("/images/profile-placeholder.jpg");  // Default fallback
+  const [parks, setParks] = useState([]);
+  // Fetch parks list
   useEffect(() => {
     const fetchParks = async () => {
       let allParks = [];
@@ -45,7 +46,7 @@ export default function AccountSettings() {
     fetchParks();
   }, []);
 
-  // Fetch user settings once parks are loaded
+  // Fetch user settings
   useEffect(() => {
     if (!currentUserId || parks.length === 0) return;
 
@@ -76,7 +77,6 @@ export default function AccountSettings() {
     fetchUserSettings();
   }, [parks, currentUserId]);
 
-  // Fetch park image based on selected parkCode
   useEffect(() => {
     const fetchParkImage = async () => {
       if (!formData.favoriteParkCode) return;
@@ -101,69 +101,75 @@ export default function AccountSettings() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
     setFormData((prev) => ({ ...prev, profileImage: file }));
+    setPreviewUrl(URL.createObjectURL(file)); // Instant preview
   };
 
-  const getBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
+  // Upload file to S3, return its URL
+  const uploadProfileImage = async () => {
+    if (!formData.profileImage || typeof formData.profileImage === "string")
+      return formData.profileImage; // already a URL
+
+    const body = new FormData();
+    body.append("file", formData.profileImage);
+    body.append("userId", currentUserId);
+    body.append("folder", "profile");
+
+    try {
+      const res = await fetch(`${BACKEND}/api/upload`, { method: "POST", body });
+      if (!res.ok) throw new Error("upload failed");
+      const { url } = await res.json();
+      return url;
+    } catch (err) {
+      console.error("S3 upload error:", err);
+      return null;
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitted:", formData);
 
-    let profileImageBase64 = null;
-    if (formData.profileImage && typeof formData.profileImage !== "string") {
-      try {
-        profileImageBase64 = await getBase64(formData.profileImage);
-      } catch (error) {
-        console.error("Error converting image:", error);
-      }
-    } else if (typeof formData.profileImage === "string") {
-      profileImageBase64 = formData.profileImage;
+    // 1️⃣ upload if we have a new file
+    const uploadedUrl = await uploadProfileImage();
+
+    // Only proceed if we have a new uploaded URL
+    if (uploadedUrl) {
+      setPreviewUrl(uploadedUrl); // Update the preview with the new image
+      setFormData((f) => ({ ...f, profileImage: uploadedUrl })); // Update form data with the new URL
     }
 
+    // 2️⃣ update DB
     const updateData = {
       password: formData.password,
       secret: formData.secret,
       fav_park:
         parks.find((p) => p.parkCode === formData.favoriteParkCode)?.fullName ||
         "",
-      profile_image: profileImageBase64,
+      profile_image: uploadedUrl, // Send the uploaded URL to be saved in the database
     };
 
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/users/${currentUserId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updateData),
-        }
-      );
-
+      const res = await fetch(`${BACKEND}/users/${currentUserId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+      });
       if (!res.ok) {
-        const errorData = await res.json();
-        console.error("Error updating settings:", errorData.error);
-      } else {
-        const data = await res.json();
-        console.log("Account settings updated successfully!", data);
+        const errData = await res.json();
+        throw new Error(errData.error || "update failed");
       }
-    } catch (error) {
-      console.error("Error submitting account settings:", error);
+      alert("Account settings saved!");
+    } catch (err) {
+      console.error("Error updating settings:", err);
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto">
+      {/* banner + avatar */}
       <div className="flex flex-col items-center mb-8">
         <img
           src={coverImageUrl}
@@ -172,13 +178,7 @@ export default function AccountSettings() {
         />
         <div className="-mt-12 w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
           <img
-            src={
-              formData.profileImage
-                ? formData.profileImage instanceof File
-                  ? URL.createObjectURL(formData.profileImage)
-                  : formData.profileImage
-                : "/images/profile-placeholder.jpg"
-            }
+            src={previewUrl} // The URL is now set directly from the backend
             alt="Profile"
             className="w-full h-full object-cover"
           />
@@ -186,20 +186,18 @@ export default function AccountSettings() {
         <h2 className="text-xl font-semibold mt-4">Account Settings</h2>
       </div>
 
+      {/* form */}
       <form className="space-y-6" onSubmit={handleSubmit}>
-        {/* Username (disabled) */}
         <div>
-          <label className="block font-medium mb-1">Username</label>{" "}
-          {/* changed from Email */}
+          <label className="block font-medium mb-1">Username</label>
           <input
             type="text"
-            value={formData.username || ""}
+            value={formData.username}
             disabled
             className="w-full border rounded p-2 bg-gray-100 text-gray-500"
           />
         </div>
 
-        {/* Password */}
         <div>
           <label className="block font-medium mb-1">Password</label>
           <input
@@ -212,7 +210,6 @@ export default function AccountSettings() {
           />
         </div>
 
-        {/* Secret Word */}
         <div>
           <label className="block font-medium mb-1">Secret Word</label>
           <input
@@ -224,7 +221,6 @@ export default function AccountSettings() {
           />
         </div>
 
-        {/* Favorite National Park */}
         <div>
           <label className="block font-medium mb-1">
             Favorite National Park
@@ -244,7 +240,6 @@ export default function AccountSettings() {
           </select>
         </div>
 
-        {/* Profile Image Upload */}
         <div>
           <label className="block font-medium mb-1">Upload Profile Image</label>
           <input
@@ -255,7 +250,6 @@ export default function AccountSettings() {
           />
         </div>
 
-        {/* Submit */}
         <div className="flex space-x-4">
           <button
             type="submit"
@@ -266,6 +260,7 @@ export default function AccountSettings() {
           <button
             type="button"
             className="border px-4 py-2 rounded hover:bg-gray-100"
+            onClick={() => window.history.back()}
           >
             Cancel
           </button>
