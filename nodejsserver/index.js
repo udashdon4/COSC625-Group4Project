@@ -21,12 +21,13 @@ const allowedOrigins = [
 // —— Configure S3 & multer ———————————————————————————
 const upload = multer();  // in‑memory storage for file uploads
 const s3 = new S3Client({
-  region: process.env.AWS_REGION,
+  region: 'us-east-1', // <— hardcoded temporarily
   credentials: {
     accessKeyId:     process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
   }
 });
+
 // ————————————————————————————————————————————————————————
 
 app.use(cors({
@@ -63,7 +64,14 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   if (userId) prefix += `${userId}/`;
   if (folder) prefix += `${folder}/`;
   const key = `${prefix}${uuid()}_${req.file.originalname}`;
-
+  if (!process.env.S3_BUCKET || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    console.error('Missing AWS config:', {
+      S3_BUCKET: process.env.S3_BUCKET,
+      AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+      AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY
+    });
+    return res.status(500).json({ error: 'AWS configuration missing' });
+  }
   try {
     await s3.send(new PutObjectCommand({
       Bucket: process.env.S3_BUCKET,
@@ -86,6 +94,8 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
     return res.json({ url });
   } catch (err) {
+    console.error('S3 upload error:', err.message, err);
+
     console.error('S3 upload error:', err);
     return res.status(500).json({ error: 'Upload to S3 failed' });
   }
