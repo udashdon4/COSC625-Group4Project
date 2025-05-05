@@ -24,6 +24,7 @@ const ParkCard = ({ park }) => {
           const isParkLiked = likedParks.some((likedPark) => likedPark.liked_park === park.parkCode);
           setIsLiked(isParkLiked);
         })
+        
         .catch((error) => {
           console.error("Error fetching liked parks-front:", error);
         });
